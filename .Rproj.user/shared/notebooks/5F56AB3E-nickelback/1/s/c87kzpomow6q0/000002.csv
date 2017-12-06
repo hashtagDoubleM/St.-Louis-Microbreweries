@@ -1,0 +1,13 @@
+"0","```r
+# libraries ----
+pkgs <- c(\"dplyr\", \"rvest\", \"tm\", \"SnowballC\", \"topicmodels\")
+vapply(pkgs, require, character.only = TRUE, FUN.VALUE = 1)
+```"
+"1","Loading required package: rvest
+Loading required package: xml2
+Loading required package: SnowballC
+Loading required package: topicmodels
+"
+"1","      dplyr       rvest          tm   SnowballC topicmodels 
+          1           1           1           1           1 
+"

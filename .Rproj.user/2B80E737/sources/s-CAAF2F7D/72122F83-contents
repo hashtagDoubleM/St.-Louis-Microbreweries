@@ -1,0 +1,111 @@
+---
+title: "Analyzing Nickelback's Lyrics"
+author: "Matt M"
+subtitle: "A Web-Scraping and Text Analysis Tutorial"
+output: html_notebook
+---
+
+## Background
+Nickelback's music is arguably one of the worst exports that Canada has ever produced. It's rumored that Nickelback was created by God as payback for the sins of mankind. In a ranking by Gitmo detainees, Nickelback was ranked as the third-worst torture device (Acid drips on bare skin was #1 and electrocution was #2). But in all seriousness, my colleagues and I were curious about how Nickelback is actually a commercially-viable band. With all the recycled content and rhyming for the sake of rhyming, you'd think people would have just stopped listening.  
+
+To better understand Nickelback, I've decided to take one for the team and scrape their lyrics and perform some text analysis.  
+
+## Setting-Up for Scraping and Text Analysis
+### Special functions
+As always, special functions are specified first. `wipe_html` is handy for eliminating annoying HTML tags. It essentially takes a HTML string, cleans out the HTML tags, and returns the non-HTML contents of that string. It'll come in handy in any web-scraping you do, so I highly recommend you hang onto it.
+```{r}
+# function to scrub html out of text ----
+wipe_html <- function(str_html) {
+        gsub("<.*?>", "", str_html)
+}
+```
+
+### Libraries
+I'll be using Hadley Wickham's `dplyr` and `rvest`. `dplyr` is the gold standard for R data wrangling, and `rvest` is just convenient for scraping web data.
+```{r}
+# libraries ----
+pkgs <- c("dplyr", "rvest", "tm", "SnowballC", "topicmodels")
+vapply(pkgs, require, character.only = TRUE, FUN.VALUE = 1)
+```
+
+### Web-Scraping
+#### Get the song list
+This code chunk scrapes the table with the song titles, selects the name of the song and the year it was released, and creates a column called `url_name` that I'll need in the next code chunk.  
+```{r}
+# get the HTML code from metrolyrics ----
+songs_url <- "https://en.wikipedia.org/wiki/List_of_songs_recorded_by_Nickelback"
+html_code <- read_html(songs_url)
+
+# get songs from song title HTML table ----
+html_songs <- html_node(html_code, xpath = '//*[@id="mw-content-text"]/div/table[3]')
+songs_df <- html_table(html_songs, header = TRUE)
+
+# drop name column to lowercase and remove columns ----
+names(songs_df) <- tolower(gsub("\\s|[[:punct:]]", "_", names(songs_df)))
+
+# clean up the songs_df "song" variable ----
+songs_df$song <- gsub('\\"', "", songs_df$song)
+
+# album `hesher` has unreliable data; nix it ----
+songs_df <- songs_df %>% filter(release != 'Hesher')
+```
+
+### Getting the lyrics
+Looping over the `url_name` variable from the previous code chunk made the most sense for this.  
+
+In this code chunk, I'll create two empty vectors for the lyrics and album names. My `for`-loop will then loop over each element in `url_name`, paste it into a hyperlink, scrape the lyrics and album name, scrub out the HTML, and place each captured piece into their respective vectors. The data frame `album_lyrics` will hold the contents of both vectors.
+```{r}
+# navigate to each song's URL and scrape the album name and lyrics ----
+## empty vectors
+lyrics <- c()
+## specify row number to add to data frame
+number <- 1
+## for-loop and create data frame from the two vectors
+for(i in seq_along(songs_df$song)) {
+        for_url_name <- songs_df$song[i]
+        ## clean up song name for URL
+        for_url_name <- tolower(gsub("[[:punct:]]|\\s", "", for_url_name))
+        ## create url
+        paste_url <- paste0("http://www.azlyrics.com/lyrics/nickelback/",
+                            for_url_name, ".html")
+        ## open connection to url
+        for_html_code <- read_html(paste_url)
+        ## scrape lyrics via selector path
+        for_lyrics <- html_node(for_html_code, 
+                                xpath = "/html/body/div[3]/div/div[2]/div[5]")
+        ## scrub html and control characters out of the lyrics
+        for_lyrics <- wipe_html(for_lyrics)
+        for_lyrics <- gsub("[[:cntrl:]]", " ", for_lyrics)
+        ## add for_lyrics to respective vectors 
+        lyrics[number] <- for_lyrics
+        number <- number + 1
+        ## status check
+        show(paste0(for_url_name, " scrape complete!"))
+        ## optional: add in 10 second delay to avoid IP block
+        Sys.sleep(10)
+}
+
+# bind data frames together and strip "Lyrics" out of name variable ----
+if(nrow(songs_df_clean) != nrow(album_lyrics)) {
+        stop("data frames have different number of rows")
+} else {
+        nb_data <- bind_cols(songs_df_clean, album_lyrics) %>% 
+                mutate(name = gsub("Lyrics", "", name))
+}
+
+# filter out missing album names and show the first 10 rows of nb_data ----
+nb_data <- nb_data %>% filter(!is.na(album))
+nb_data[1:10, ]
+
+```
+
+# Update: I got busted for scraping too quickly by azlyrics.com and received a permanent ban on my IP address. Here's to my ISP switching up my address soon. This code is still entirely reproducible, **so make sure you use the Sys.sleep() function** I inserted into the "Getting lyrics" chunk so you can delay the execution of the loop by 10 seconds.
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,44 @@
+"0","```r
+# navigate to each song's URL and scrape the album name and lyrics ----
+## empty vectors
+lyrics <- c()
+## specify row number to add to data frame
+number <- 1
+## for-loop and create data frame from the two vectors
+for(i in seq_along(songs_df$song)) {
+        for_url_name <- songs_df$song[i]
+        ## clean up song name for URL
+        for_url_name <- tolower(gsub(\"[[:punct:]]|\\s\", \"\", for_url_name))
+        ## create url
+        paste_url <- paste0(\"http://www.azlyrics.com/lyrics/nickelback/\",
+                            for_url_name, \".html\")
+        ## open connection to url
+        for_html_code <- read_html(paste_url)
+        ## scrape lyrics via selector path
+        for_lyrics <- html_node(for_html_code, 
+                                xpath = \"/html/body/div[3]/div/div[2]/div[5]\")
+        ## scrub html and control characters out of the lyrics
+        for_lyrics <- wipe_html(for_lyrics)
+        for_lyrics <- gsub(\"[[:cntrl:]]\", \" \", for_lyrics)
+        ## add for_lyrics to respective vectors 
+        lyrics[number] <- for_lyrics
+        number <- number + 1
+        ## status check
+        show(paste0(for_url_name, \" scrape complete!\"))
+        ## optional: add in 10 second delay to avoid IP block
+        Sys.sleep(10)
+}
+
+# bind data frames together and strip \"Lyrics\" out of name variable ----
+if(nrow(songs_df_clean) != nrow(album_lyrics)) {
+        stop(\"data frames have different number of rows\")
+} else {
+        nb_data <- bind_cols(songs_df_clean, album_lyrics) %>% 
+                mutate(name = gsub(\"Lyrics\", \"\", name))
+}
+
+# filter out missing album names and show the first 10 rows of nb_data ----
+nb_data <- nb_data %>% filter(!is.na(album))
+nb_data[1:10, ]
+
+```"

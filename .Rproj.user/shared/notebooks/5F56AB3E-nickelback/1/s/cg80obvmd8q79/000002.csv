@@ -1,0 +1,6 @@
+"0","```r
+# function to scrub html out of text ----
+wipe_html <- function(str_html) {
+        gsub(\"<.*?>\", \"\", str_html)
+}
+```"

@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1512270274983.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "102497629",
+    "id" : "F7706428",
+    "lastKnownWriteTime" : 1512567634,
+    "last_content_update" : 1512567634834,
+    "path" : "~/Dropbox/Analytics/stl_beers/scrape_code.R",
+    "project_path" : "scrape_code.R",
+    "properties" : {
+        "cursorPosition" : "54,0",
+        "scrollLine" : "41",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

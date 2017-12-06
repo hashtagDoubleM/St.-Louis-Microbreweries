@@ -1,0 +1,14 @@
+"0","```r
+# get the HTML code from metrolyrics ----
+songs_url <- \"https://en.wikipedia.org/wiki/List_of_songs_recorded_by_Nickelback\"
+html_code <- read_html(songs_url)
+# get songs from song title HTML table ----
+html_songs <- html_node(html_code, xpath = '//*[@id=\"mw-content-text\"]/div/table[3]')
+songs_df <- html_table(html_songs, header = TRUE)
+# drop name column to lowercase and remove columns ----
+names(songs_df) <- tolower(gsub(\"\\s|[[:punct:]]\", \"_\", names(songs_df)))
+# clean up the songs_df \"song\" variable ----
+songs_df$song <- gsub('\\\"', \"\", songs_df$song)
+# album `hesher` has unreliable data; nix it ----
+songs_df <- songs_df %>% filter(release != 'Hesher')
+```"
